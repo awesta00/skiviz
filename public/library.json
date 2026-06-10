@@ -1,0 +1,22 @@
+[
+  {
+    "id": "dp-1",
+    "title": "DP, fast, flat, left-facing, Gjerdalen",
+    "category": "Classic",
+    "duration": "0:12",
+    "file": "/videos/DP-Gjerdalen.mp4",
+    "thumbnail": "/videos/DP-Gjerdalen-thumb.jpg",
+    "description": "Double pole.",
+    "tags": ["fast", "left-facing", "flat", "dp"]
+  },
+  {
+    "id": "v2-1",
+    "title": "V2, sprint, uphill, left-facing, Chanavat",
+    "category": "Skate",
+    "duration": "0:07",
+    "file": "/videos/V2-Chanavat.mp4",
+    "thumbnail": "/videos/V2-Chanavat-thumb.jpg",
+    "description": "V2 sprint.",
+    "tags": ["sprint", "left-facing", "uphill", "v2"]
+  }
+]
