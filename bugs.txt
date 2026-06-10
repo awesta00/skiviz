@@ -1,0 +1,18 @@
+Known Current bugs (resolved?):
+IOS - Safari:
+-play both doesn't work on the athlete video side
+-many videos just don't work (show up black), and the top right corner that shows the athlete title vid shows IMG_#### (different numbers that change and glitch quickly)
+
+Mobile (vertical POV):
+-phone view is too small to fit all the videoplayer settings (fullscreen button doesn't fit)
+
+Mobile (landscape POV):
+-cannot see the videos at all. The app must detect when landscape mode activates; 
+then what should happen is the top div bar above the videos disappears to save space.
+Make sure the Play Both and bottom nav bar are not stuck to the bottom to allow for scrolling.
+Allow the app to scroll down so the user can swipe around (especially for when they zoom in)
+
+Mobile both:
+-if possible, make it so the url bar area disappears to make more space
+
+Other issue: when doing Ctrl+Shift+i, browser console says: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render.

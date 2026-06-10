@@ -9,23 +9,16 @@ export default function SettingsScreen({
   const [keepLoopOn, setKeepLoopOn] = useState(false);
 
   return (
-    <div style={{ 
-      flex: 1, 
-      overflowY: "auto", 
-      padding: "12px 14px 32px",
-      paddingLeft: `calc(14px + var(--safe-left))`,
-      paddingRight: `calc(14px + var(--safe-right))`,
-      paddingBottom: `calc(32px + var(--safe-bottom))`,
-    }}>
-      {/* <Section title="Playback defaults">
-        <SettingRow
-          label="Loop on by default"
-          hint="Both players will loop when loaded"
-        >
-          <Toggle value={keepLoopOn} onChange={setKeepLoopOn} />
-        </SettingRow>
-      </Section> */}
-
+    <div
+      style={{
+        flex: 1,
+        overflowY: "auto",
+        padding: "12px 14px 32px",
+        paddingLeft: `calc(14px + var(--safe-left))`,
+        paddingRight: `calc(14px + var(--safe-right))`,
+        paddingBottom: `calc(32px + var(--safe-bottom))`,
+      }}
+    >
       <Section title="Appearance">
         <SettingRow
           label="Dark theme"

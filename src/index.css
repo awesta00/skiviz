@@ -43,7 +43,12 @@
   --accent-global: #ef4444;
 }
 
-html, body, #root {
+html {
+  height: 100dvh;
+  height: 100%;
+}
+
+body, #root {
   height: 100%;
   width: 100%;
   overflow: hidden;
