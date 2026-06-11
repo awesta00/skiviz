@@ -1,5 +1,6 @@
 import React from "react";
 
+//Icons
 const TABS = [
   {
     id: "compare",

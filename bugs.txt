@@ -15,4 +15,3 @@ Allow the app to scroll down so the user can swipe around (especially for when t
 Mobile both:
 -if possible, make it so the url bar area disappears to make more space
 
-Other issue: when doing Ctrl+Shift+i, browser console says: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render.

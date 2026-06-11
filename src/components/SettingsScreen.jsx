@@ -2,10 +2,7 @@ import { useState } from "react";
 
 const VERSION = "0.1.0";
 
-export default function SettingsScreen({
-  theme = "light",
-  onThemeChange = () => {},
-}) {
+export default function SettingsScreen() {
   const [keepLoopOn, setKeepLoopOn] = useState(false);
 
   return (
@@ -19,18 +16,6 @@ export default function SettingsScreen({
         paddingBottom: `calc(32px + var(--safe-bottom))`,
       }}
     >
-      <Section title="Appearance">
-        <SettingRow
-          label="Dark theme"
-          hint="Switch to dark mode for lower brightness"
-        >
-          <Toggle
-            value={theme === "dark"}
-            onChange={(isDark) => onThemeChange(isDark ? "dark" : "light")}
-          />
-        </SettingRow>
-      </Section>
-
       <Section title="About">
         <div
           style={{
@@ -45,6 +30,10 @@ export default function SettingsScreen({
           <div style={{ marginTop: 6 }}>
             Add to your home screen from Safari (iOS) or Chrome (Android) to use
             as a full-screen app.
+          </div>
+          <div style={{ marginTop: 6 }}>
+            Email ski.viz.ski@gmail.com to submit technique clips to add to the
+            library.
           </div>
         </div>
       </Section>
