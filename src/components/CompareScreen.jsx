@@ -5,6 +5,7 @@ export default function CompareScreen({
   pendingLibraryVideo,
   onLibraryVideoConsumed,
   onNavigateToLibrary,
+  isMobileLandscape,
 }) {
   const athleteRef = useRef(null);
   const refRef = useRef(null);
@@ -14,7 +15,6 @@ export default function CompareScreen({
   const [athleteVideo, setAthleteVideo] = useState(null);
   const [fullscreenPlayer, setFullscreenPlayer] = useState(null);
 
-  // Handle incoming library videos
   useEffect(() => {
     if (pendingLibraryVideo) {
       setLibraryVideo(pendingLibraryVideo);
@@ -62,30 +62,37 @@ export default function CompareScreen({
         flex: 1,
         display: "flex",
         flexDirection: "column",
-        overflow: "hidden",
+        overflow: isMobileLandscape ? "visible" : "hidden",
+        height: isMobileLandscape ? "auto" : "100%",
         padding: fullscreenPlayer
           ? `0 var(--safe-left) 0 var(--safe-right)`
           : `8px calc(8px + var(--safe-left)) 0 calc(8px + var(--safe-right))`,
         gap: fullscreenPlayer ? 0 : 6,
       }}
     >
-      {/* Both players stay mounted here. We adjust visibility and width via inline styles dynamically */}
+      {/* Player containers row */}
       <div
         style={{
-          flex: 1,
+          // On desktop, this expands to fill maximum vertical space
+          flex: isMobileLandscape ? "none" : 1,
           display: "flex",
           gap: fullscreenPlayer ? 0 : 6,
-          minHeight: 0,
+          height: isMobileLandscape ? "68vh" : "auto",
+          minHeight: isMobileLandscape ? "280px" : 0,
         }}
       >
         {/* Athlete Player Wrapper */}
         <div
           style={{
             flex: fullscreenPlayer === "ref" ? 0 : 1,
-            display: fullscreenPlayer === "ref" ? "none" : "flex",
+            display: "flex",
             flexDirection: "column",
             height: "100%",
             minWidth: 0,
+            width: fullscreenPlayer === "ref" ? 0 : "auto",
+            opacity: fullscreenPlayer === "ref" ? 0 : 1,
+            visibility: fullscreenPlayer === "ref" ? "hidden" : "visible",
+            overflow: "hidden",
           }}
         >
           <VideoPlayer
@@ -98,7 +105,6 @@ export default function CompareScreen({
             onExitFullscreen={() => setFullscreenPlayer(null)}
             onVideoChange={(video) =>
               setAthleteVideo((prev) => {
-                // Safeguard against infinite re-render loops from inline function references
                 if (
                   prev?.file === video.src &&
                   prev?.title === video.videoTitle
@@ -114,10 +120,14 @@ export default function CompareScreen({
         <div
           style={{
             flex: fullscreenPlayer === "athlete" ? 0 : 1,
-            display: fullscreenPlayer === "athlete" ? "none" : "flex",
+            display: "flex",
             flexDirection: "column",
             height: "100%",
             minWidth: 0,
+            width: fullscreenPlayer === "athlete" ? 0 : "auto",
+            opacity: fullscreenPlayer === "athlete" ? 0 : 1,
+            visibility: fullscreenPlayer === "athlete" ? "hidden" : "visible",
+            overflow: "hidden",
           }}
         >
           <VideoPlayer
@@ -134,7 +144,7 @@ export default function CompareScreen({
         </div>
       </div>
 
-      {/* Global Controls Strip (only visible when not in fullscreen mode) */}
+      {/* Global Controls Strip */}
       {!fullscreenPlayer && (
         <div
           style={{
@@ -147,8 +157,8 @@ export default function CompareScreen({
             gap: 8,
             flexShrink: 0,
             border: "0.5px solid var(--border)",
-            marginBottom: 8,
-            marginTop: 0,
+            marginBottom: 12,
+            marginTop: isMobileLandscape ? 8 : 4,
           }}
         >
           <GlobalBtn onClick={handleRestartBoth} title="Restart both">
@@ -209,6 +219,8 @@ export default function CompareScreen({
               justifyContent: "center",
               color: "#fff",
               flexShrink: 0,
+              minWidth: "48px",
+              minHeight: "48px",
             }}
           >
             {bothPlaying ? (
@@ -303,6 +315,8 @@ function GlobalBtn({ onClick, children, title }) {
         justifyContent: "center",
         color: "var(--text-secondary)",
         flexShrink: 0,
+        minWidth: "36px",
+        minHeight: "36px",
       }}
     >
       {children}

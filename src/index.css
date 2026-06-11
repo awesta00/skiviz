@@ -79,9 +79,9 @@ button {
   -webkit-tap-highlight-color: transparent;
 }
 
-/* Ensure touch targets are at least 44x44 on mobile */
+/* Ensure touch targets are at least 44x44 on mobile, except for compact toolbar buttons */
 @media (max-width: 768px) {
-  button {
+  button:not([style*="min-width: auto"]):not([style*="min-width:28px"]) {
     min-height: 44px;
     min-width: 44px;
   }

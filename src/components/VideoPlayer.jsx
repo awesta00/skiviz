@@ -105,6 +105,27 @@ const VideoPlayer = forwardRef(function VideoPlayer(
     }
   }
 
+  // Adjusts the video timeline by exactly 1 frame (assuming 30fps)
+  function stepFrame(direction) {
+    const v = videoRef.current;
+    if (!v || !src) return;
+
+    // Pause if it's currently running to allow steady stepping
+    if (!v.paused) {
+      v.pause();
+      setIsPlaying(false);
+    }
+
+    const frameTime = 1 / 30;
+    let newTime = v.currentTime + direction * frameTime;
+    if (newTime < 0) newTime = 0;
+    if (newTime > duration) newTime = duration;
+
+    v.currentTime = newTime;
+    setCurrentTime(newTime);
+    onTimeUpdate?.(newTime);
+  }
+
   function handleScrub(e) {
     const v = videoRef.current;
     if (!v || !duration) return;
@@ -420,6 +441,84 @@ const VideoPlayer = forwardRef(function VideoPlayer(
             ) : (
               <PlayIcon color={src ? "#000" : "var(--text-muted)"} />
             )}
+          </button>
+
+          {/* Individual Frame Step Back */}
+          <button
+            onClick={() => stepFrame(-1)}
+            disabled={!src}
+            title="Step back 1 frame"
+            style={{
+              width: 22,
+              height: 22,
+              background: "var(--bg-raised)",
+              border: `0.5px solid ${accentColor}55`,
+              borderRadius: 4,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              color: accentColor,
+              opacity: src ? 1 : 0.4,
+              cursor: src ? "pointer" : "default",
+              flexShrink: 0,
+            }}
+          >
+            <svg
+              width="12"
+              height="12"
+              viewBox="0 0 16 16"
+              fill="none"
+              aria-hidden="true"
+            >
+              <path d="M10 4L5 8l5 4V4z" fill="currentColor" />
+              <rect
+                x="3"
+                y="4"
+                width="1.5"
+                height="8"
+                rx="0.75"
+                fill="currentColor"
+              />
+            </svg>
+          </button>
+
+          {/* Individual Frame Step Forward */}
+          <button
+            onClick={() => stepFrame(1)}
+            disabled={!src}
+            title="Step forward 1 frame"
+            style={{
+              width: 22,
+              height: 22,
+              background: "var(--bg-raised)",
+              border: `0.5px solid ${accentColor}55`,
+              borderRadius: 4,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              color: accentColor,
+              opacity: src ? 1 : 0.4,
+              cursor: src ? "pointer" : "default",
+              flexShrink: 0,
+            }}
+          >
+            <svg
+              width="12"
+              height="12"
+              viewBox="0 0 16 16"
+              fill="none"
+              aria-hidden="true"
+            >
+              <path d="M6 4l5 4-5 4V4z" fill="currentColor" />
+              <rect
+                x="11.5"
+                y="4"
+                width="1.5"
+                height="8"
+                rx="0.75"
+                fill="currentColor"
+              />
+            </svg>
           </button>
 
           {/* Timecode */}
