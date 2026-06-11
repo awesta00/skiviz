@@ -1,17 +1,20 @@
 Known Current bugs:
-IOS - Safari:
+Ipad, Safari:
 -play both doesn't work on the athlete video side
 -athlete videos show up black when uploading and changing in/out of fullscreen
+-bottom nav bar is only visible by a pixel, and can't click on it
+-can't scroll down to view nav bar
 
 Mobile (portrait POV):
--phone view is too small to fit all the videoplayer settings (fullscreen button doesn't fit)
+-phone view is too small to fit all the videoplayer settings (fullscreen, playback speed, loop button doesn't fit). Solution, make button size smaller + enable side scrolling
+-can't scroll down to access nav bar or globabl video player settings
 
 Mobile (landscape POV):
--cannot see the videos at all. The app must detect when landscape mode activates; 
-Make sure the Play Both and bottom nav bar are not stuck to the bottom to allow for scrolling and touchscreen across the screen.
-Allow the app to scroll down so the user can swipe around (especially for when they zoom in)
+-can't scroll down (therefore can't access nav bar or globabl video player settings)
+-video player buttons may be too big for some screens (shrink down a little bit)
 
-The flow of mobile UI is unusable currently so please make these changes and necessary steps to have a clean mobile friendly profile
+QOL ideas:
+-for mobile, when user zooms in manually on their phone, allow them to easily scroll around the screen because it currently locks after your fingers let go after zooming in (this feature already works on Ipad Safari)
 
 
 Ideas:

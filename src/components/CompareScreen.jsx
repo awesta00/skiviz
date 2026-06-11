@@ -6,6 +6,7 @@ export default function CompareScreen({
   onLibraryVideoConsumed,
   onNavigateToLibrary,
   isMobileLandscape,
+  isMobilePortrait,
 }) {
   const athleteRef = useRef(null);
   const refRef = useRef(null);
@@ -22,10 +23,18 @@ export default function CompareScreen({
     }
   }, [pendingLibraryVideo, onLibraryVideoConsumed]);
 
-  function handlePlayBoth() {
-    athleteRef.current?.play();
-    refRef.current?.play();
-    setBothPlaying(true);
+  // Safari-safe play: use Promise to catch NotAllowedError silently
+  async function handlePlayBoth() {
+    try {
+      const plays = [];
+      if (athleteRef.current) plays.push(athleteRef.current.play());
+      if (refRef.current) plays.push(refRef.current.play());
+      await Promise.all(plays);
+      setBothPlaying(true);
+    } catch (e) {
+      // Autoplay blocked or no video loaded — stay paused
+      setBothPlaying(false);
+    }
   }
 
   function handlePauseBoth() {
@@ -56,14 +65,16 @@ export default function CompareScreen({
     refRef.current?.seek(rT + 1 / 30);
   }
 
+  const isMobile = isMobileLandscape || isMobilePortrait;
+
   return (
     <div
       style={{
         flex: 1,
         display: "flex",
         flexDirection: "column",
-        overflow: isMobileLandscape ? "visible" : "hidden",
-        height: isMobileLandscape ? "auto" : "100%",
+        overflow: isMobile ? "visible" : "hidden",
+        height: isMobile ? "auto" : "100%",
         padding: fullscreenPlayer
           ? `0 var(--safe-left) 0 var(--safe-right)`
           : `8px calc(8px + var(--safe-left)) 0 calc(8px + var(--safe-right))`,
@@ -73,12 +84,20 @@ export default function CompareScreen({
       {/* Player containers row */}
       <div
         style={{
-          // On desktop, this expands to fill maximum vertical space
-          flex: isMobileLandscape ? "none" : 1,
+          flex: isMobile ? "none" : 1,
           display: "flex",
           gap: fullscreenPlayer ? 0 : 6,
-          height: isMobileLandscape ? "68vh" : "auto",
-          minHeight: isMobileLandscape ? "280px" : 0,
+          // Landscape: side-by-side tall, Portrait phone: side-by-side shorter
+          height: isMobileLandscape
+            ? "68vh"
+            : isMobilePortrait
+              ? "55vh"
+              : "auto",
+          minHeight: isMobileLandscape
+            ? "280px"
+            : isMobilePortrait
+              ? "220px"
+              : 0,
         }}
       >
         {/* Athlete Player Wrapper */}
@@ -103,6 +122,7 @@ export default function CompareScreen({
             isFullscreen={fullscreenPlayer === "athlete"}
             onEnterFullscreen={() => setFullscreenPlayer("athlete")}
             onExitFullscreen={() => setFullscreenPlayer(null)}
+            isMobile={isMobile}
             onVideoChange={(video) =>
               setAthleteVideo((prev) => {
                 if (
@@ -140,6 +160,7 @@ export default function CompareScreen({
             onEnterFullscreen={() => setFullscreenPlayer("ref")}
             onExitFullscreen={() => setFullscreenPlayer(null)}
             onSelectFromLibrary={onNavigateToLibrary}
+            isMobile={isMobile}
           />
         </div>
       </div>
@@ -158,7 +179,7 @@ export default function CompareScreen({
             flexShrink: 0,
             border: "0.5px solid var(--border)",
             marginBottom: 12,
-            marginTop: isMobileLandscape ? 8 : 4,
+            marginTop: isMobile ? 8 : 4,
           }}
         >
           <GlobalBtn onClick={handleRestartBoth} title="Restart both">

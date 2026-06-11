@@ -10,12 +10,16 @@ export default function App() {
 
   // Distinguish between a phone/tablet held sideways vs a desktop computer
   const [isMobileLandscape, setIsMobileLandscape] = useState(false);
+  // Detect mobile portrait (phone-sized, vertical)
+  const [isMobilePortrait, setIsMobilePortrait] = useState(false);
 
   useEffect(() => {
     function update() {
       const landscape = window.innerWidth > window.innerHeight;
-      const isMobileSize = window.innerWidth <= 1024; // Targets phones and smaller tablets
+      const isMobileSize = window.innerWidth <= 1024;
+      const isPhoneSize = window.innerWidth <= 600;
       setIsMobileLandscape(landscape && isMobileSize);
+      setIsMobilePortrait(!landscape && isPhoneSize);
     }
 
     window.addEventListener("resize", update);
@@ -26,7 +30,6 @@ export default function App() {
     }
     window.addEventListener("orientationchange", delayedUpdate);
 
-    // Run initial check
     update();
 
     return () => {
@@ -48,16 +51,18 @@ export default function App() {
     setActiveTab("compare");
   }
 
+  // Any mobile device (portrait phone or landscape tablet/phone) gets scrollable layout
+  const isMobile = isMobileLandscape || isMobilePortrait;
+
   return (
     <div
       style={{
         display: "flex",
         flexDirection: "column",
-        // Desktop and mobile portrait stay locked to full viewport height
-        height: isMobileLandscape ? "auto" : "100vh",
+        height: isMobile ? "auto" : "100vh",
         minHeight: "100vh",
         background: "var(--bg-base)",
-        overflow: isMobileLandscape ? "auto" : "hidden",
+        overflow: isMobile ? "auto" : "hidden",
       }}
     >
       {/* Screen content workspace wrapper */}
@@ -65,10 +70,10 @@ export default function App() {
         style={{
           display: "flex",
           flexDirection: "column",
-          flex: isMobileLandscape ? "none" : 1,
-          overflow: isMobileLandscape ? "visible" : "hidden",
+          flex: isMobile ? "none" : 1,
+          overflow: isMobile ? "visible" : "hidden",
           position: "relative",
-          height: isMobileLandscape ? "auto" : "100%",
+          height: isMobile ? "auto" : "100%",
         }}
       >
         <div
@@ -76,7 +81,7 @@ export default function App() {
             display: activeTab === "compare" ? "flex" : "none",
             flexDirection: "column",
             flex: 1,
-            height: isMobileLandscape ? "auto" : "100%",
+            height: isMobile ? "auto" : "100%",
           }}
         >
           <CompareScreen
@@ -84,6 +89,7 @@ export default function App() {
             onLibraryVideoConsumed={() => setPendingLibraryVideo(null)}
             onNavigateToLibrary={() => setActiveTab("library")}
             isMobileLandscape={isMobileLandscape}
+            isMobilePortrait={isMobilePortrait}
           />
         </div>
 
@@ -110,7 +116,7 @@ export default function App() {
         </div>
       </div>
 
-      {/* Stuck to the bottom on Desktop/Portrait, flows below on Mobile Landscape */}
+      {/* Stuck to the bottom on Desktop, flows below on Mobile */}
       <BottomNav activeTab={activeTab} onTabChange={setActiveTab} />
     </div>
   );

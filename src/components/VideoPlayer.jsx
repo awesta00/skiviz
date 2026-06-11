@@ -21,6 +21,7 @@ const VideoPlayer = forwardRef(function VideoPlayer(
     isFullscreen,
     onSelectFromLibrary,
     onVideoChange,
+    isMobile,
   },
   ref,
 ) {
@@ -36,8 +37,19 @@ const VideoPlayer = forwardRef(function VideoPlayer(
 
   // Expose controls to parent via ref
   useImperativeHandle(ref, () => ({
-    play: () => videoRef.current?.play(),
-    pause: () => videoRef.current?.pause(),
+    play: () => {
+      const v = videoRef.current;
+      if (!v) return Promise.resolve();
+      const p = v.play();
+      if (p) {
+        p.then(() => setIsPlaying(true)).catch(() => setIsPlaying(false));
+      }
+      return p ?? Promise.resolve();
+    },
+    pause: () => {
+      videoRef.current?.pause();
+      setIsPlaying(false);
+    },
     seek: (t) => {
       if (videoRef.current) videoRef.current.currentTime = t;
     },
@@ -76,6 +88,37 @@ const VideoPlayer = forwardRef(function VideoPlayer(
     v.loop = loop;
   }, [loop]);
 
+  // Safari black video fix: when exiting/entering fullscreen, force a repaint
+  // by briefly toggling the src or seeking to current time after a tick.
+  const prevFullscreen = useRef(isFullscreen);
+  useEffect(() => {
+    const changed = prevFullscreen.current !== isFullscreen;
+    prevFullscreen.current = isFullscreen;
+    if (!changed) return;
+    const v = videoRef.current;
+    if (!v || !src) return;
+
+    const wasPlaying = !v.paused;
+    const savedTime = v.currentTime;
+
+    // Small delay lets the DOM re-layout before we poke the video
+    setTimeout(() => {
+      if (!videoRef.current) return;
+      videoRef.current.currentTime = savedTime;
+      // Force a repaint on Safari by toggling display
+      videoRef.current.style.display = "none";
+      // eslint-disable-next-line no-unused-expressions
+      videoRef.current.offsetHeight; // trigger reflow
+      videoRef.current.style.display = "";
+      if (wasPlaying) {
+        videoRef.current
+          .play()
+          .then(() => setIsPlaying(true))
+          .catch(() => {});
+      }
+    }, 80);
+  }, [isFullscreen, src]);
+
   function handleTimeUpdate() {
     if (!scrubbing.current && videoRef.current) {
       const t = videoRef.current.currentTime;
@@ -97,30 +140,26 @@ const VideoPlayer = forwardRef(function VideoPlayer(
     const v = videoRef.current;
     if (!v || !src) return;
     if (v.paused) {
-      v.play();
-      setIsPlaying(true);
+      v.play()
+        .then(() => setIsPlaying(true))
+        .catch(() => setIsPlaying(false));
     } else {
       v.pause();
       setIsPlaying(false);
     }
   }
 
-  // Adjusts the video timeline by exactly 1 frame (assuming 30fps)
   function stepFrame(direction) {
     const v = videoRef.current;
     if (!v || !src) return;
-
-    // Pause if it's currently running to allow steady stepping
     if (!v.paused) {
       v.pause();
       setIsPlaying(false);
     }
-
     const frameTime = 1 / 30;
     let newTime = v.currentTime + direction * frameTime;
     if (newTime < 0) newTime = 0;
     if (newTime > duration) newTime = duration;
-
     v.currentTime = newTime;
     setCurrentTime(newTime);
     onTimeUpdate?.(newTime);
@@ -168,6 +207,11 @@ const VideoPlayer = forwardRef(function VideoPlayer(
   }
 
   const isEmpty = !src;
+
+  // On mobile shrink compact buttons to keep them all visible
+  const btnSize = isMobile ? 20 : 22;
+  const iconSize = isMobile ? 10 : 12;
+  const playBtnSize = isMobile ? 24 : 28;
 
   return (
     <div
@@ -243,6 +287,8 @@ const VideoPlayer = forwardRef(function VideoPlayer(
             onEnded={handleEnded}
             playsInline
             preload="metadata"
+            // Safari: prevent native fullscreen takeover
+            x-webkit-airplay="deny"
           />
         ) : (
           <>
@@ -418,15 +464,26 @@ const VideoPlayer = forwardRef(function VideoPlayer(
           />
         </div>
 
-        {/* Time + buttons row */}
-        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+        {/* Time + buttons row — horizontally scrollable on mobile so nothing gets clipped */}
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: isMobile ? 4 : 6,
+            overflowX: isMobile ? "auto" : "visible",
+            // Hide scrollbar visually but keep it functional
+            scrollbarWidth: "none",
+            msOverflowStyle: "none",
+            WebkitOverflowScrolling: "touch",
+          }}
+        >
           {/* Play/pause */}
           <button
             onClick={togglePlay}
             disabled={!src}
             style={{
-              width: 28,
-              height: 28,
+              width: playBtnSize,
+              height: playBtnSize,
               borderRadius: "50%",
               background: src ? accentColor : "var(--bg-raised)",
               display: "flex",
@@ -437,9 +494,15 @@ const VideoPlayer = forwardRef(function VideoPlayer(
             }}
           >
             {isPlaying ? (
-              <PauseIcon color={src ? "#000" : "var(--text-muted)"} />
+              <PauseIcon
+                color={src ? "#000" : "var(--text-muted)"}
+                size={isMobile ? 10 : 12}
+              />
             ) : (
-              <PlayIcon color={src ? "#000" : "var(--text-muted)"} />
+              <PlayIcon
+                color={src ? "#000" : "var(--text-muted)"}
+                size={isMobile ? 10 : 12}
+              />
             )}
           </button>
 
@@ -449,8 +512,8 @@ const VideoPlayer = forwardRef(function VideoPlayer(
             disabled={!src}
             title="Step back 1 frame"
             style={{
-              width: 22,
-              height: 22,
+              width: btnSize,
+              height: btnSize,
               background: "var(--bg-raised)",
               border: `0.5px solid ${accentColor}55`,
               borderRadius: 4,
@@ -464,8 +527,8 @@ const VideoPlayer = forwardRef(function VideoPlayer(
             }}
           >
             <svg
-              width="12"
-              height="12"
+              width={iconSize}
+              height={iconSize}
               viewBox="0 0 16 16"
               fill="none"
               aria-hidden="true"
@@ -488,8 +551,8 @@ const VideoPlayer = forwardRef(function VideoPlayer(
             disabled={!src}
             title="Step forward 1 frame"
             style={{
-              width: 22,
-              height: 22,
+              width: btnSize,
+              height: btnSize,
               background: "var(--bg-raised)",
               border: `0.5px solid ${accentColor}55`,
               borderRadius: 4,
@@ -503,8 +566,8 @@ const VideoPlayer = forwardRef(function VideoPlayer(
             }}
           >
             <svg
-              width="12"
-              height="12"
+              width={iconSize}
+              height={iconSize}
               viewBox="0 0 16 16"
               fill="none"
               aria-hidden="true"
@@ -525,10 +588,12 @@ const VideoPlayer = forwardRef(function VideoPlayer(
           <span
             style={{
               fontFamily: "var(--font-mono)",
-              fontSize: 10,
+              fontSize: isMobile ? 9 : 10,
               color: "var(--text-secondary)",
               flex: 1,
               letterSpacing: "-0.3px",
+              whiteSpace: "nowrap",
+              minWidth: isMobile ? 64 : "auto",
             }}
           >
             {formatTime(currentTime)} / {formatTime(duration)}
@@ -541,11 +606,13 @@ const VideoPlayer = forwardRef(function VideoPlayer(
               background: "var(--bg-raised)",
               border: `0.5px solid ${accentColor}55`,
               borderRadius: 4,
-              padding: "2px 6px",
-              fontSize: 10,
+              padding: isMobile ? "2px 4px" : "2px 6px",
+              fontSize: isMobile ? 9 : 10,
               color: accentColor,
               fontFamily: "var(--font-mono)",
               fontWeight: 500,
+              flexShrink: 0,
+              whiteSpace: "nowrap",
             }}
           >
             {speed}×
@@ -558,9 +625,10 @@ const VideoPlayer = forwardRef(function VideoPlayer(
               background: loop ? dimColor + "55" : "var(--bg-raised)",
               border: `0.5px solid ${loop ? accentColor : "var(--border)"}`,
               borderRadius: 4,
-              padding: "2px 6px",
-              fontSize: 10,
+              padding: isMobile ? "2px 4px" : "2px 6px",
+              fontSize: isMobile ? 9 : 10,
               color: loop ? accentColor : "var(--text-muted)",
+              flexShrink: 0,
             }}
           >
             ↻
@@ -575,18 +643,19 @@ const VideoPlayer = forwardRef(function VideoPlayer(
                 background: "var(--bg-raised)",
                 border: `0.5px solid ${accentColor}55`,
                 borderRadius: 4,
-                padding: "2px 6px",
-                fontSize: 10,
+                padding: isMobile ? "2px 4px" : "2px 6px",
+                fontSize: isMobile ? 9 : 10,
                 color: accentColor,
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
+                flexShrink: 0,
               }}
             >
               {isFullscreen ? (
                 <svg
-                  width="10"
-                  height="10"
+                  width={isMobile ? 8 : 10}
+                  height={isMobile ? 8 : 10}
                   viewBox="0 0 12 12"
                   fill="none"
                   aria-hidden="true"
@@ -598,8 +667,8 @@ const VideoPlayer = forwardRef(function VideoPlayer(
                 </svg>
               ) : (
                 <svg
-                  width="10"
-                  height="10"
+                  width={isMobile ? 8 : 10}
+                  height={isMobile ? 8 : 10}
                   viewBox="0 0 12 12"
                   fill="none"
                   aria-hidden="true"
@@ -641,11 +710,11 @@ const VideoPlayer = forwardRef(function VideoPlayer(
   );
 });
 
-function PlayIcon({ color }) {
+function PlayIcon({ color, size = 12 }) {
   return (
     <svg
-      width="12"
-      height="12"
+      width={size}
+      height={size}
       viewBox="0 0 12 12"
       fill="none"
       aria-hidden="true"
@@ -655,11 +724,11 @@ function PlayIcon({ color }) {
   );
 }
 
-function PauseIcon({ color }) {
+function PauseIcon({ color, size = 12 }) {
   return (
     <svg
-      width="12"
-      height="12"
+      width={size}
+      height={size}
       viewBox="0 0 12 12"
       fill="none"
       aria-hidden="true"

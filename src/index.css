@@ -54,7 +54,6 @@ body,
 #root {
   height: 100%;
   width: 100%;
-  overflow: hidden;
 }
 
 body {
@@ -65,6 +64,8 @@ body {
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
   overscroll-behavior: none;
+  /* Allow pinch-zoom scrolling after zoom — Safari/mobile */
+  touch-action: pan-x pan-y pinch-zoom;
 }
 
 button {
@@ -79,9 +80,9 @@ button {
   -webkit-tap-highlight-color: transparent;
 }
 
-/* Ensure touch targets are at least 44x44 on mobile, except for compact toolbar buttons */
+/* Only enforce large touch targets on nav/action buttons, not compact toolbar ones */
 @media (max-width: 768px) {
-  button:not([style*="min-width: auto"]):not([style*="min-width:28px"]) {
+  button.touch-target {
     min-height: 44px;
     min-width: 44px;
   }
